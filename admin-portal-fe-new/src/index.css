@@ -1,0 +1,33 @@
+/* src/index.css */
+@import './styles/tailwind.css';
+/* Other styles... */
+main {
+  text-align: center;
+  flex-grow: 1;
+  padding: 16px;
+}
+
+footer {
+  text-align: center;
+}
+/* App.css */
+body {
+  margin: 0;
+  padding: 0;
+}
+
+.container {
+  display: flex;
+}
+
+/* Adjust as needed */
+header {
+  flex-shrink: 0;
+}
+
+aside {
+  flex-shrink: 0;
+  width: 200px;
+}
+
+
