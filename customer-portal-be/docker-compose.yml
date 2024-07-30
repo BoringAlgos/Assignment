@@ -1,0 +1,75 @@
+version: '3.8'
+services:
+  main:
+    container_name: Customer_Portal
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: 'php artisan serve --host=0.0.0.0'
+    volumes:
+      - .:/app
+      - /app/vendor # Exclude the vendor folder
+    ports:
+      - 8000:8000
+    networks:
+      - customer-portal-be_laravel-exa
+
+  queue:
+    container_name: Queue_Customer_Portal
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: 'php artisan queue:work'
+    depends_on:
+      - db
+    networks:
+      - customer-portal-be_laravel-exa
+
+  db:
+    platform: linux/x86_64
+    image: mysql:8.0
+    container_name: Customer_Portal_Database
+    environment:
+      MYSQL_DATABASE: "customer_portal"
+      MYSQL_USER: "customer"
+      MYSQL_ROOT: "root"
+      MYSQL_PASSWORD: "customer"
+      MYSQL_ROOT_PASSWORD: "customer"
+    volumes:
+      - db:/var/lib/mysql
+    ports:
+      - 3306:3306
+    networks:
+      - customer-portal-be_laravel-exa
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: PhpMyAdmin_Customer_Portal
+    networks:
+      - customer-portal-be_laravel-exa
+    links:
+      - db
+    environment:
+      PMA_HOST: db
+      PMA_PORT: 3306
+      PMA_ARBITRARY: 1
+    restart: always
+    ports:
+      - 8082:80
+
+  mailpit:
+    image: axllent/mailpit
+    container_name: MailPit_Customer_Portal
+    ports:
+      - "1026:1025"
+      - "8026:8025"
+    networks:
+      - customer-portal-be_laravel-exa
+
+networks:
+  customer-portal-be_laravel-exa:
+    driver: bridge
+
+volumes:
+  db:
+    driver: local

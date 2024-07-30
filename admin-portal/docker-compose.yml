@@ -1,0 +1,67 @@
+version: '3.8'
+services:
+  main:
+    container_name: Admin_Portal
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: 'php artisan serve --host=0.0.0.0'
+    volumes:
+      - .:/app
+      - /app/vendor # Exclude the vendor folder
+    ports:
+      - 8001:8000
+
+  queue:
+    container_name: Queue_Admin_Portal
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: 'php artisan queue:work'
+    depends_on:
+      - db
+
+  db:
+    platform: linux/x86_64
+    image: mysql:8.0
+    container_name: Admin_Portal_Database
+    environment:
+      MYSQL_DATABASE: "admin_portal"
+      MYSQL_USER: "admin"
+      MYSQL_ROOT: "root"
+      MYSQL_PASSWORD: "admin"
+      MYSQL_ROOT_PASSWORD: "admin"
+    volumes:
+      - db:/var/lib/mysql
+    ports:
+      - 3307:3306
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: PhpMyAdmin_Admin_Portal
+    links:
+      - db
+    environment:
+      PMA_HOST: db
+      PMA_PORT: 3306
+      PMA_ARBITRARY: 1
+    restart: always
+    ports:
+      - 8083:80
+
+  mailpit:
+    image: axllent/mailpit
+    container_name: MailPit_Admin_Portal
+    ports:
+      - "1028:1028"
+      - "8028:8028"
+    networks:
+      - laravel-exa
+
+networks:
+  laravel-exa:
+    driver: bridge
+
+volumes:
+  db:
+    driver: local

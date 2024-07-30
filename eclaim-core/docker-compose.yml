@@ -1,0 +1,75 @@
+version: '3.8'
+services:
+  main:
+    container_name: Eclaim
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: 'php artisan serve --host=0.0.0.0'
+    volumes:
+      - .:/app
+      - /app/vendor # Exclude the vendor folder
+    ports:
+      - 8002:8000
+    networks:
+      - eclaim-core_laravel-exa
+
+  queue:
+    container_name: Queue_Eclaim
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: 'php artisan queue:work'
+    depends_on:
+      - db
+    networks:
+      - eclaim-core_laravel-exa
+
+  db:
+    platform: linux/x86_64
+    image: mysql:8.0
+    container_name: Eclaim_Database
+    environment:
+      MYSQL_DATABASE: "eclaim_portal"
+      MYSQL_USER: "eclaim"
+      MYSQL_ROOT: "root"
+      MYSQL_PASSWORD: "eclaim"
+      MYSQL_ROOT_PASSWORD: "eclaim"
+    volumes:
+      - db:/var/lib/mysql
+    ports:
+      - 3308:3306
+    networks:
+      - eclaim-core_laravel-exa
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: PhpMyAdmin_Eclaim
+    networks:
+      - eclaim-core_laravel-exa
+    links:
+      - db
+    environment:
+      PMA_HOST: db
+      PMA_PORT: 3306
+      PMA_ARBITRARY: 1
+    restart: always
+    ports:
+      - 8084:80
+
+  mailpit:
+    image: axllent/mailpit
+    container_name: MailPit_Eclaim
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+    networks:
+      - eclaim-core_laravel-exa
+
+networks:
+  eclaim-core_laravel-exa:
+    driver: bridge
+
+volumes:
+  db:
+    driver: local
